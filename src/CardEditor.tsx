@@ -1,28 +1,18 @@
 import { useState } from 'react'
-import { CARD_COLORS, db, fileToCover, type Card } from './db'
+import { BLOCK_COLORS, BLOCK_PRESETS, blocksOf, blocksToText, CARD_COLORS, db, fileToCover, newBlock, type Block, type Card } from './db'
+import { BlockView, CodeEdit } from './Blocks'
+import { LANGS, normLang } from './highlight'
 import { Md } from './Md'
 import { SketchPad } from './SketchPad'
-
-const BACK_TEMPLATE = `## Thought process
--
-
-## Key insight
--
-
-## Code
-\`\`\`python
-def solve():
-    pass
-\`\`\`
-
-**Time:** O()  **Space:** O()
-`
 
 export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: Card; onClose: () => void }) {
   const [title, setTitle] = useState(card?.title ?? '')
   const [color, setColor] = useState<string | undefined>(card?.color)
   const [front, setFront] = useState(card?.front ?? '')
-  const [back, setBack] = useState(card?.back ?? BACK_TEMPLATE)
+  const [blocks, setBlocks] = useState<Block[]>(() =>
+    card ? blocksOf(card) : ['Thought process', 'Logic', 'Code', 'Complexity'].map((n) => newBlock(BLOCK_PRESETS.find((p) => p.name === n)!)),
+  )
+  const [adding, setAdding] = useState(false)
   const [side, setSide] = useState<'front' | 'back'>('front')
   const [preview, setPreview] = useState(false)
   const [frontImages, setFrontImages] = useState<string[]>(card?.frontImages ?? [])
@@ -30,8 +20,6 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
   const [sketches, setSketches] = useState<string[]>(card?.sketches ?? [])
   const [sketching, setSketching] = useState(false)
 
-  const text = side === 'front' ? front : back
-  const setText = side === 'front' ? setFront : setBack
   const images = side === 'front' ? frontImages : backImages
   const setImages = side === 'front' ? setFrontImages : setBackImages
 
@@ -41,9 +29,24 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
     if (added.length) setImages((prev) => [...prev, ...added])
   }
 
+  const patch = (id: string, p: Partial<Block>) => setBlocks((bs) => bs.map((b) => (b.id === id ? { ...b, ...p } : b)))
+  const move = (i: number, d: number) =>
+    setBlocks((bs) => {
+      const c = [...bs]
+      ;[c[i], c[i + d]] = [c[i + d], c[i]]
+      return c
+    })
+  const pasteImages = (e: React.ClipboardEvent) => {
+    const files = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith('image/'))
+    if (files.length) {
+      e.preventDefault()
+      addImages(files)
+    }
+  }
+
   async function save() {
     if (!front.trim() && !frontImages.length) return
-    const data = { title: title.trim(), color, front, back, frontImages, backImages, sketches }
+    const data = { title: title.trim(), color, front, back: blocksToText(blocks), blocks, frontImages, backImages, sketches }
     if (card) await db.cards.update(card.id, data)
     else await db.cards.add({ deckId, ...data, createdAt: Date.now() } as Card)
     onClose()
@@ -79,24 +82,89 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
 
         {preview ? (
           <div className="editor preview">
-            <Md text={text} />
+            {side === 'front' ? <Md text={front} /> : blocks.map((b) => <BlockView key={b.id} block={b} />)}
             {images.map((s, i) => <img key={i} className="card-img" src={s} alt={`Image ${i + 1}`} />)}
           </div>
-        ) : (
+        ) : side === 'front' ? (
           <textarea
             className="editor"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onPaste={(e) => {
-              const files = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith('image/'))
-              if (files.length) {
-                e.preventDefault()
-                addImages(files)
-              }
-            }}
-            placeholder={side === 'front' ? 'Write the problem… (you can paste a picture here too)' : 'Markdown: thoughts, ```code``` blocks, lists… (paste a picture too)'}
+            value={front}
+            onChange={(e) => setFront(e.target.value)}
+            onPaste={pasteImages}
+            placeholder="Write the problem… (you can paste a picture here too)"
             spellCheck={false}
           />
+        ) : (
+          <div className="eblocks">
+            {blocks.map((b, i) => (
+              <div key={b.id} className="eb" style={{ ['--bc' as string]: b.color }}>
+                <div className="eb-head">
+                  <input
+                    className="eb-label"
+                    value={b.label}
+                    placeholder="Block name"
+                    onChange={(e) => patch(b.id, { label: e.target.value })}
+                  />
+                  <div className="eb-tools">
+                    <button className="icon" aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
+                    <button className="icon" aria-label="Move down" disabled={i === blocks.length - 1} onClick={() => move(i, 1)}>↓</button>
+                    <button className="icon" aria-label="Delete block" onClick={() => setBlocks(blocks.filter((x) => x.id !== b.id))}>×</button>
+                  </div>
+                </div>
+                <div className="swatches small">
+                  {BLOCK_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      aria-label={c}
+                      className={'swatch' + (c === b.color ? ' on' : '')}
+                      style={{ background: c }}
+                      onClick={() => patch(b.id, { color: c })}
+                    />
+                  ))}
+                  <label className={'swatch custom' + (BLOCK_COLORS.includes(b.color) ? '' : ' on')} style={{ background: b.color }} title="Pick any colour">
+                    <input type="color" value={b.color} onChange={(e) => patch(b.id, { color: e.target.value })} />
+                  </label>
+                  {b.kind === 'code' && (
+                    <select className="lang" value={normLang(b.lang) ?? ''} onChange={(e) => patch(b.id, { lang: e.target.value })}>
+                      {Object.entries(LANGS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                    </select>
+                  )}
+                </div>
+                {b.kind === 'code' ? (
+                  <CodeEdit value={b.text} lang={b.lang} onChange={(v) => patch(b.id, { text: v })} />
+                ) : (
+                  <textarea
+                    className="editor eb-text"
+                    value={b.text}
+                    onChange={(e) => patch(b.id, { text: e.target.value })}
+                    onPaste={pasteImages}
+                    placeholder="Markdown works here: lists, **bold**, ```code```…"
+                    spellCheck={false}
+                  />
+                )}
+              </div>
+            ))}
+            <div className="add-block">
+              <button className="btn small" onClick={() => setAdding(!adding)}>+ Add block</button>
+              {adding && (
+                <div className="presets">
+                  {BLOCK_PRESETS.map((p) => (
+                    <button
+                      key={p.name}
+                      className="chip"
+                      onClick={() => {
+                        setBlocks([...blocks, newBlock(p)])
+                        setAdding(false)
+                      }}
+                    >
+                      <span className="dot" style={{ background: p.color }} />
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         <div className="row left">
@@ -113,12 +181,7 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
               }}
             />
           </label>
-          {side === 'back' && (
-            <>
-              <button className="btn small" onClick={() => setText(text + '\n```mermaid\ngraph TD\n  A[Start] --> B[Next]\n```\n')}>+ Mermaid diagram</button>
-              <button className="btn small" onClick={() => setSketching(true)}>+ Sketch</button>
-            </>
-          )}
+          {side === 'back' && <button className="btn small" onClick={() => setSketching(true)}>+ Sketch</button>}
         </div>
 
         {(images.length > 0 || (side === 'back' && sketches.length > 0)) && (
