@@ -7,6 +7,7 @@ export interface Deck {
   cover?: string // data URL
   color: string
   createdAt: number
+  scheduled?: boolean // in the revision schedule? (missing = yes)
   stage?: number // successful reviews in a row, drives the interval
   nextReview?: number // start-of-day timestamp
   lastReviewed?: number
@@ -66,6 +67,8 @@ export interface Card {
   color?: string // front colour; falls back to the deck colour
   frontImages?: string[] // pictures on the question side
   backImages?: string[] // pictures on the answer side
+  frontImageW?: number[] // picture widths in % of the card (0 = automatic), same order as frontImages
+  backImageW?: number[]
   createdAt: number
 }
 
