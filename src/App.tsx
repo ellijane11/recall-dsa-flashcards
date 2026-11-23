@@ -3,6 +3,7 @@ import { HashRouter, Link, Route, Routes, useNavigate, useParams } from 'react-r
 import { useLiveQuery } from 'dexie-react-hooks'
 import { cardLabel, db, DECK_COLORS, fileToCover, type Card, type Deck } from './db'
 import { CardEditor } from './CardEditor'
+import { ImportCards } from './ImportCards'
 import { FlipCard } from './Flip'
 import { Shell, Tabs } from './Shell'
 import { CalendarPage } from './Calendar'
@@ -169,6 +170,7 @@ function DeckPage() {
   const nav = useNavigate()
   const deck = useLiveQuery(() => db.decks.get(Number(id)), [id])
   const [editing, setEditing] = useState(false)
+  const [importing, setImporting] = useState(false)
 
   if (!deck) return <Shell><p className="lede">Loading…</p></Shell>
   return (
@@ -179,6 +181,7 @@ function DeckPage() {
       <div className="row left">
         <Link to={`/review/${deck.id}`} className="btn">Review now</Link>
         <button className="btn ghost" onClick={() => setEditing(true)}>Edit deck</button>
+        <button className="btn ghost" onClick={() => setImporting(true)}>Import cards</button>
         <button className="btn ghost" onClick={() => db.decks.update(deck.id, { scheduled: !isScheduled(deck) })}>
           {isScheduled(deck) ? 'Remove from schedule' : 'Add to schedule'}
         </button>
@@ -196,6 +199,7 @@ function DeckPage() {
       </div>
       <CardsSection deck={deck} />
       {editing && <DeckForm deck={deck} onClose={() => setEditing(false)} />}
+      {importing && <ImportCards deckId={deck.id} onClose={() => setImporting(false)} />}
     </Shell>
   )
 }
