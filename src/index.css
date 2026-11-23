@@ -18,12 +18,10 @@
   --paper: color-mix(in srgb, #fff 55%, var(--bg));
   --code-bg: color-mix(in srgb, var(--ink) 6%, var(--paper));
   --logo: #4a4fd6;
-  --tok-kw: #b02a5c; --tok-str: #1f7a4d; --tok-num: #b3541e; --tok-com: #7b766a; --tok-fn: #2f5fb3; --tok-ty: #8a5a00;
 }
 [data-theme='dark'] {
   --paper: color-mix(in srgb, #fff 8%, var(--bg));
   --code-bg: color-mix(in srgb, #000 30%, var(--paper));
-  --tok-kw: #ff8ab0; --tok-str: #8be0ae; --tok-num: #ffb27a; --tok-com: #8d887c; --tok-fn: #8db6ff; --tok-ty: #f0cb6a;
   --accent: #ff6a42;
   --logo: #a9b1ff;
   color-scheme: dark;
