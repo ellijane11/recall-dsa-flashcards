@@ -14,6 +14,7 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
     card ? blocksOf(card) : ['Thought process', 'Logic', 'Code', 'Complexity'].map((n) => newBlock(BLOCK_PRESETS.find((p) => p.name === n)!)),
   )
   const [adding, setAdding] = useState(false)
+  const [openId, setOpenId] = useState<string | null>(null) // block whose colour/language strip is open
   const [side, setSide] = useState<'front' | 'back'>('front')
   const [preview, setPreview] = useState(false)
   const [frontImages, setFrontImages] = useState<string[]>(card?.frontImages ?? [])
@@ -105,12 +106,13 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
                     onChange={(e) => patch(b.id, { label: e.target.value })}
                   />
                   <div className="eb-tools">
+                    <button className={'icon' + (openId === b.id ? ' on' : '')} aria-label="Block options" onClick={() => setOpenId(openId === b.id ? null : b.id)}>⋯</button>
                     <button className="icon" aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
                     <button className="icon" aria-label="Move down" disabled={i === blocks.length - 1} onClick={() => move(i, 1)}>↓</button>
                     <button className="icon" aria-label="Delete block" onClick={() => setBlocks(blocks.filter((x) => x.id !== b.id))}>×</button>
                   </div>
                 </div>
-                <div className="swatches small">
+                {openId === b.id && <div className="swatches small hstrip">
                   {BLOCK_COLORS.map((c) => (
                     <button
                       key={c}
@@ -128,7 +130,7 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
                       {Object.entries(LANGS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                     </select>
                   )}
-                </div>
+                </div>}
                 {b.kind === 'code' ? (
                   <CodeEdit value={b.text} lang={b.lang} onChange={(v) => patch(b.id, { text: v })} />
                 ) : (
