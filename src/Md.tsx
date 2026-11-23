@@ -6,6 +6,24 @@ import { highlight, plainCode } from './highlight'
 const marked = new Marked({
   gfm: true,
   breaks: true,
+  // [[c:#hex|text]] recolours text, [[h:#hex|text]] highlights it (written by the editor toolbar).
+  extensions: [
+    {
+      name: 'tint',
+      level: 'inline',
+      start: (src: string) => src.indexOf('[['),
+      tokenizer(this: any, src: string) {
+        const m = /^\[\[([ch]):(#[0-9a-fA-F]{3,8})\|([^\]]*)\]\]/.exec(src)
+        if (m) return { type: 'tint', raw: m[0], kind: m[1], color: m[2], tokens: this.lexer.inlineTokens(m[3]) }
+      },
+      renderer(this: any, t: any) {
+        const inner = this.parser.parseInline(t.tokens)
+        return t.kind === 'h'
+          ? `<mark class="hl" style="background:${t.color}">${inner}</mark>`
+          : `<span style="color:${t.color}">${inner}</span>`
+      },
+    },
+  ],
   renderer: {
     code({ text, lang }) {
       if (lang === 'mermaid') {
