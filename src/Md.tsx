@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Marked } from 'marked'
 import { useIsDark } from './theme'
-import hljs from 'highlight.js/lib/common'
+import { highlight, plainCode } from './highlight'
 
 const marked = new Marked({
   gfm: true,
@@ -11,9 +11,7 @@ const marked = new Marked({
       if (lang === 'mermaid') {
         return `<div class="mermaid-box" data-code="${encodeURIComponent(text)}"></div>`
       }
-      const language = lang && hljs.getLanguage(lang) ? lang : undefined
-      const html = language ? hljs.highlight(text, { language }).value : hljs.highlightAuto(text).value
-      return `<pre><code class="hljs">${html}</code></pre>`
+      return `<div class="code-box" data-lang="${(lang ?? '').replace(/[^\w+#-]/g, '')}" data-code="${encodeURIComponent(text)}">${plainCode(text)}</div>`
     },
     // Raw HTML typed into notes is shown as text, not executed.
     html({ text }) {
@@ -34,6 +32,19 @@ export function Md({ text }: { text: string }) {
   const html = useMemo(() => marked.parse(text || '') as string, [text])
   const ref = useRef<HTMLDivElement>(null)
   const dark = useIsDark()
+
+  useEffect(() => {
+    const codes = ref.current?.querySelectorAll<HTMLElement>('.code-box')
+    if (!codes?.length) return
+    let cancelled = false
+    codes.forEach(async (box) => {
+      const out = await highlight(decodeURIComponent(box.dataset.code ?? ''), box.dataset.lang, dark)
+      if (!cancelled) box.innerHTML = out
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [html, dark])
 
   useEffect(() => {
     const boxes = ref.current?.querySelectorAll<HTMLElement>('.mermaid-box')
