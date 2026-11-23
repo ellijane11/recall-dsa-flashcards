@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: { __BUILD__: JSON.stringify(new Date().toISOString()) },
   base: './', // works on GitHub Pages sub-paths, Netlify, Cloudflare Pages
   plugins: [
     react(),
