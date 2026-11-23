@@ -213,3 +213,17 @@ label.btn { cursor: pointer; }
 .face.front .center .md ul, .face.front .center .md ol { display: inline-block; text-align: left; }
 .face.front .center .card-img { margin-inline: auto; }
 .face.front .center .md { font-size: 18px; line-height: 1.5; }
+
+/* resizable pictures */
+.rimg { position: relative; margin: 10px 0; max-width: 100%; width: fit-content; }
+.rimg.sized { max-width: none; }
+.rimg img { display: block; max-width: 100%; max-height: 420px; object-fit: contain; border-radius: 12px; border: 1px solid var(--hair); background: #fff; -webkit-user-drag: none; user-select: none; }
+.rimg.sized img { width: 100%; max-height: none; height: auto; }
+.rimg-h { position: absolute; right: -6px; bottom: -6px; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; background: var(--ink); color: var(--bg); font-size: 14px; line-height: 1; cursor: nwse-resize; touch-action: none; display: grid; place-items: center; padding: 0; box-shadow: 0 2px 8px #0004; }
+.face.front .center .rimg { margin-inline: auto; }
+.hint-line { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+
+/* schedule toggle */
+.check { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+.pill.off { opacity: .65; font-style: italic; }
