@@ -197,3 +197,19 @@ label.btn { cursor: pointer; }
 .rt-dot.custom { background: conic-gradient(#f2492f, #e6b450, #6b8f71, #3e6fb0, #7a5bd0, #f2492f); }
 .rt-dot.custom input { position: absolute; inset: -6px; width: 36px; height: 36px; opacity: 0; cursor: pointer; }
 .md mark.hl { color: #1b1813; padding: 0 3px; border-radius: 4px; }
+
+/* options hide behind a ⋯ button and open as one horizontal strip */
+.hstrip, .rich-bar.open { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+.hstrip > *, .rich-bar.open > * { flex: none; }
+.rich-bar:not(.open) { border: 0; padding: 0; background: none; }
+.rt-b.more { font-size: 16px; line-height: 1; padding: 2px 10px; letter-spacing: 1px; }
+.rt-b.on, .eb-tools .icon.on { background: var(--ink); color: var(--bg); }
+.hstrip { padding: 4px 2px; }
+
+/* question side: centred in the card; long text falls back to top-aligned and scrolls */
+.face.front .scroll { display: flex; flex-direction: column; }
+.face.front .center { margin-block: auto; text-align: center; padding: 4px 0; }
+.face.front .center .md p, .face.front .center .card-title { text-align: center; }
+.face.front .center .md ul, .face.front .center .md ol { display: inline-block; text-align: left; }
+.face.front .center .card-img { margin-inline: auto; }
+.face.front .center .md { font-size: 18px; line-height: 1.5; }
