@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Shell } from './Shell'
 import { ColorWheel } from './ColorWheel'
 import { currentBg, resetBg, setBg, setMode, useTheme } from './theme'
+import { buildLabel, forceUpdate } from './update'
 import { buildIcs, download, exportBackup, importBackup, notificationsSupported, notifyIfDue } from './reminders'
 
 export function SettingsPage() {
@@ -121,6 +122,17 @@ export function SettingsPage() {
               }}
             />
           </label>
+        </div>
+      </section>
+
+      <section className="panel">
+        <h2>App version</h2>
+        <p>
+          This copy was built {buildLabel()}. If a new feature is missing, tap the button: it clears the app's
+          saved offline copy and loads the latest. Your decks and cards are not deleted.
+        </p>
+        <div className="row left">
+          <button className="btn" onClick={forceUpdate}>Update app</button>
         </div>
       </section>
 
