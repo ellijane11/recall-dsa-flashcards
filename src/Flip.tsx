@@ -16,9 +16,11 @@ export function FlipCard({ card, color: deckColor }: { card: Card; color: string
         <div className="face front" style={{ background: color, color: readableOn(color) }}>
           <span className="tag">Problem</span>
           <div className="scroll">
-            {title && <h2 className="card-title">{title}</h2>}
-            <Md text={card.front} />
-            {card.frontImages?.map((s, i) => <img key={i} className="card-img" src={s} alt={`Question image ${i + 1}`} />)}
+            <div className="center">
+              {title && <h2 className="card-title">{title}</h2>}
+              <Md text={card.front} />
+              {card.frontImages?.map((s, i) => <img key={i} className="card-img" src={s} alt={`Question image ${i + 1}`} />)}
+            </div>
           </div>
           <span className="hint">tap to flip</span>
         </div>
