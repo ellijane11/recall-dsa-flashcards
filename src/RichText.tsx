@@ -1,8 +1,8 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
+import { stripTint, tintLines } from './tint'
 
 const TEXT_COLORS = ['#E2552F', '#E8834A', '#C99700', '#2F9E5B', '#2E8B8B', '#3E6FB0', '#7A5BD0', '#C2547A']
 const HILITES = ['#FFE066', '#FFC9A8', '#B8F0C8', '#B5E3F5', '#D9C8FF', '#FFC2DA']
-const TINT = /\[\[[ch]:#[0-9a-fA-F]{3,8}\|([^\]]*)\]\]/g
 
 /** A textarea with a small toolbar: select text, then tap a colour to recolour or highlight it. */
 export function RichText({
@@ -19,6 +19,7 @@ export function RichText({
   className?: string
 }) {
   const ref = useRef<HTMLTextAreaElement>(null)
+  const [open, setOpen] = useState(false)
 
   function edit(fn: (sel: string) => string) {
     const t = ref.current
@@ -38,13 +39,15 @@ export function RichText({
     })
   }
 
-  const tint = (kind: 'c' | 'h', color: string) => edit((s) => `[[${kind}:${color}|${s.replace(TINT, '$1')}]]`)
+  const tint = (kind: 'c' | 'h', color: string) => edit((s) => tintLines(kind, color, stripTint(s)))
   // Keep the text selection when tapping toolbar buttons.
   const keep = (e: React.MouseEvent | React.PointerEvent) => e.preventDefault()
 
   return (
     <div className="rich">
-      <div className="rich-bar" onMouseDown={keep}>
+      <div className={'rich-bar' + (open ? ' open' : '')} onMouseDown={keep}>
+        <button className={'rt-b more' + (open ? ' on' : '')} title="Text colour, highlight and more" aria-expanded={open} onClick={() => setOpen(!open)}>⋯</button>
+        {open && <>
         <button className="rt-b" title="Bold" onClick={() => edit((s) => `**${s}**`)}><b>B</b></button>
         <span className="rt-label">Text</span>
         {TEXT_COLORS.map((c) => (
@@ -60,7 +63,8 @@ export function RichText({
         <label className="rt-dot custom" title="Any highlight colour">
           <input type="color" defaultValue="#FFE066" onChange={(e) => tint('h', e.target.value)} />
         </label>
-        <button className="rt-b" title="Remove colour and highlight from the selection" onClick={() => edit((s) => s.replace(TINT, '$1'))}>Clear</button>
+        <button className="rt-b" title="Remove colour and highlight from the selection" onClick={() => edit(stripTint)}>Clear</button>
+        </>}
       </div>
       <textarea
         ref={ref}
