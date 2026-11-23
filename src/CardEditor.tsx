@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BLOCK_COLORS, BLOCK_PRESETS, blocksOf, blocksToText, CARD_COLORS, db, fileToCover, newBlock, type Block, type Card } from './db'
 import { BlockView, CodeEdit } from './Blocks'
+import { RichText } from './RichText'
 import { LANGS, normLang } from './highlight'
 import { Md } from './Md'
 import { SketchPad } from './SketchPad'
@@ -86,13 +87,11 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
             {images.map((s, i) => <img key={i} className="card-img" src={s} alt={`Image ${i + 1}`} />)}
           </div>
         ) : side === 'front' ? (
-          <textarea
-            className="editor"
+          <RichText
             value={front}
-            onChange={(e) => setFront(e.target.value)}
+            onChange={setFront}
             onPaste={pasteImages}
             placeholder="Write the problem… (you can paste a picture here too)"
-            spellCheck={false}
           />
         ) : (
           <div className="eblocks">
@@ -133,13 +132,12 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
                 {b.kind === 'code' ? (
                   <CodeEdit value={b.text} lang={b.lang} onChange={(v) => patch(b.id, { text: v })} />
                 ) : (
-                  <textarea
+                  <RichText
                     className="editor eb-text"
                     value={b.text}
-                    onChange={(e) => patch(b.id, { text: e.target.value })}
+                    onChange={(v) => patch(b.id, { text: v })}
                     onPaste={pasteImages}
-                    placeholder="Markdown works here: lists, **bold**, ```code```…"
-                    spellCheck={false}
+                    placeholder="Markdown works here: lists, **bold**, ```code```… Select text to colour or highlight it."
                   />
                 )}
               </div>

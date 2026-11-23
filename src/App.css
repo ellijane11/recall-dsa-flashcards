@@ -187,3 +187,13 @@ label.btn { cursor: pointer; }
 .code-edit textarea:focus { border-color: var(--accent); }
 .code-box pre.shiki, .code-edit textarea { font-variant-ligatures: none; }
 .swatch.custom:not(.on) { background: conic-gradient(#f2492f, #e6b450, #6b8f71, #3e6fb0, #7a5bd0, #f2492f) !important; }
+
+/* text colour / highlight toolbar */
+.rich { display: flex; flex-direction: column; gap: 6px; }
+.rich-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--hair); border-radius: 12px; background: var(--paper); }
+.rt-label { font-size: 11px; color: var(--muted); margin-left: 6px; font-family: var(--pixel); }
+.rt-b { border: 1px solid var(--hair); background: var(--surface); border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; }
+.rt-dot { width: 20px; height: 20px; border-radius: 50%; border: 1px solid #0003; cursor: pointer; padding: 0; position: relative; overflow: hidden; display: inline-block; }
+.rt-dot.custom { background: conic-gradient(#f2492f, #e6b450, #6b8f71, #3e6fb0, #7a5bd0, #f2492f); }
+.rt-dot.custom input { position: absolute; inset: -6px; width: 36px; height: 36px; opacity: 0; cursor: pointer; }
+.md mark.hl { color: #1b1813; padding: 0 3px; border-radius: 4px; }
