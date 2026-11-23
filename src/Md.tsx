@@ -2,18 +2,19 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Marked } from 'marked'
 import { useIsDark } from './theme'
 import { highlight, plainCode } from './highlight'
+import { upgradeTint } from './tint'
 
 const marked = new Marked({
   gfm: true,
   breaks: true,
-  // [[c:#hex|text]] recolours text, [[h:#hex|text]] highlights it (written by the editor toolbar).
+  // ⟦c:#hex|text⟧ recolours text, ⟦h:#hex|text⟧ highlights it (written by the editor toolbar).
   extensions: [
     {
       name: 'tint',
       level: 'inline',
-      start: (src: string) => src.indexOf('[['),
+      start: (src: string) => src.indexOf('⟦'),
       tokenizer(this: any, src: string) {
-        const m = /^\[\[([ch]):(#[0-9a-fA-F]{3,8})\|([^\]]*)\]\]/.exec(src)
+        const m = /^⟦([ch]):(#[0-9a-fA-F]{3,8})\|([^⟧]*)⟧/.exec(src)
         if (m) return { type: 'tint', raw: m[0], kind: m[1], color: m[2], tokens: this.lexer.inlineTokens(m[3]) }
       },
       renderer(this: any, t: any) {
@@ -47,7 +48,7 @@ function loadMermaid() {
 let uid = 0
 
 export function Md({ text }: { text: string }) {
-  const html = useMemo(() => marked.parse(text || '') as string, [text])
+  const html = useMemo(() => marked.parse(upgradeTint(text || '')) as string, [text])
   const ref = useRef<HTMLDivElement>(null)
   const dark = useIsDark()
 
