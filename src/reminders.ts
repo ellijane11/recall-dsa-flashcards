@@ -1,5 +1,5 @@
 ﻿import { db } from './db'
-import { isDue, projection, startOfDay } from './schedule'
+import { isDue, isScheduled, projection, startOfDay } from './schedule'
 
 export const notificationsSupported = () => 'Notification' in window && 'serviceWorker' in navigator
 
@@ -32,7 +32,7 @@ export async function buildIcs(hour = 9) {
   const decks = await db.decks.toArray()
   const url = location.href.split('#')[0]
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Recall//DSA flashcards//EN', 'CALSCALE:GREGORIAN']
-  for (const d of decks) {
+  for (const d of decks.filter(isScheduled)) {
     const dates = [Math.max(d.nextReview ?? startOfDay(d.createdAt), startOfDay(Date.now())), ...projection(d)]
     dates.forEach((t, i) => {
       lines.push(

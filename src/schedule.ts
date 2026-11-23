@@ -23,7 +23,10 @@ export const dueOf = (d: Deck) => d.nextReview ?? startOfDay(d.createdAt)
 /** Overdue decks are shown as due today. */
 export const effectiveDue = (d: Deck, now = Date.now()) => Math.max(dueOf(d), startOfDay(now))
 
-export const isDue = (d: Deck, now = Date.now()) => dueOf(d) <= startOfDay(now)
+/** Decks can be left out of the revision schedule. */
+export const isScheduled = (d: Deck) => d.scheduled !== false
+
+export const isDue = (d: Deck, now = Date.now()) => isScheduled(d) && dueOf(d) <= startOfDay(now)
 
 export function applyRating(d: Deck, rating: Rating, now = Date.now()) {
   const stage = d.stage ?? 0
@@ -52,6 +55,7 @@ export function projection(d: Deck, count = 4, now = Date.now()) {
 }
 
 export function dueLabel(d: Deck, now = Date.now()) {
+  if (!isScheduled(d)) return 'Not scheduled'
   const diff = Math.round((dueOf(d) - startOfDay(now)) / 86400000)
   if (diff <= 0) return 'Due today'
   if (diff === 1) return 'Due tomorrow'

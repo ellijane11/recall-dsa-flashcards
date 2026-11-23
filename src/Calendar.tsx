@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { cardLabel, db } from './db'
 import { Shell, Tabs } from './Shell'
-import { addDays, effectiveDue, projection, startOfDay } from './schedule'
+import { addDays, effectiveDue, isScheduled, projection, startOfDay } from './schedule'
 import { readableOn } from './theme'
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -37,8 +37,10 @@ export function CalendarPage() {
   const deckById = new Map(decks.map((d) => [d.id, d]))
 
   for (const d of decks) {
-    push(effectiveDue(d), { deckId: d.id, label: d.title, color: d.color, kind: 'due' })
-    projection(d).forEach((t) => push(t, { deckId: d.id, label: d.title, color: d.color, kind: 'next' }))
+    if (isScheduled(d)) {
+      push(effectiveDue(d), { deckId: d.id, label: d.title, color: d.color, kind: 'due' })
+      projection(d).forEach((t) => push(t, { deckId: d.id, label: d.title, color: d.color, kind: 'next' }))
+    }
     d.reviews?.forEach((r) => push(startOfDay(r.at), { deckId: d.id, label: d.title, color: d.color, kind: 'done' }))
   }
 
