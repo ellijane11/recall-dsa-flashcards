@@ -9,7 +9,7 @@ import { CalendarPage } from './Calendar'
 import { ReviewPage } from './Review'
 import { SettingsPage } from './Settings'
 import { notifyIfDue } from './reminders'
-import { dueLabel, isDue, startOfDay } from './schedule'
+import { dueLabel, isDue, isScheduled, startOfDay } from './schedule'
 import { readableOn } from './theme'
 import './App.css'
 
@@ -18,10 +18,11 @@ function DeckForm({ deck, onClose }: { deck?: Deck; onClose: () => void }) {
   const [subtitle, setSubtitle] = useState(deck?.subtitle ?? '')
   const [cover, setCover] = useState(deck?.cover)
   const [color, setColor] = useState(deck?.color ?? DECK_COLORS[0])
+  const [scheduled, setScheduled] = useState(deck ? isScheduled(deck) : true)
 
   async function save() {
     if (!title.trim()) return
-    const data = { title: title.trim(), subtitle: subtitle.trim(), cover, color }
+    const data = { title: title.trim(), subtitle: subtitle.trim(), cover, color, scheduled }
     if (deck) await db.decks.update(deck.id, data)
     else await db.decks.add({ ...data, createdAt: Date.now(), stage: 0, nextReview: startOfDay(Date.now()), reviews: [] } as unknown as Deck)
     onClose()
@@ -59,6 +60,10 @@ function DeckForm({ deck, onClose }: { deck?: Deck; onClose: () => void }) {
         </div>
         <input placeholder="Title (e.g. Arrays)" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
         <input placeholder="Subtitle (e.g. Two pointers, sliding window)" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+        <label className="check">
+          <input type="checkbox" checked={scheduled} onChange={(e) => setScheduled(e.target.checked)} />
+          <span>Include in my revision schedule</span>
+        </label>
         <div className="row">
           <button className="btn ghost" onClick={onClose}>Cancel</button>
           <button className="btn" onClick={save} disabled={!title.trim()}>Save</button>
@@ -101,7 +106,7 @@ function Home() {
               <strong>{d.title}</strong>
             </div>
             <div className="sub">{d.subtitle || '—'}</div>
-            <div className="pills"><span className="pill">{counts?.[d.id] ?? 0} {(counts?.[d.id] ?? 0) === 1 ? "card" : "cards"}</span> <span className={'pill' + (isDue(d) ? ' due' : '')}>{dueLabel(d)}</span></div>
+            <div className="pills"><span className="pill">{counts?.[d.id] ?? 0} {(counts?.[d.id] ?? 0) === 1 ? "card" : "cards"}</span> <span className={'pill' + (isDue(d) ? ' due' : '') + (isScheduled(d) ? '' : ' off')}>{dueLabel(d)}</span></div>
           </Link>
         ))}
       </div>
@@ -174,6 +179,9 @@ function DeckPage() {
       <div className="row left">
         <Link to={`/review/${deck.id}`} className="btn">Review now</Link>
         <button className="btn ghost" onClick={() => setEditing(true)}>Edit deck</button>
+        <button className="btn ghost" onClick={() => db.decks.update(deck.id, { scheduled: !isScheduled(deck) })}>
+          {isScheduled(deck) ? 'Remove from schedule' : 'Add to schedule'}
+        </button>
         <button
           className="btn ghost"
           onClick={async () => {
