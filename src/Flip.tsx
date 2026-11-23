@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Md } from './Md'
 import { BackBlocks } from './Blocks'
+import { Rimg } from './Rimg'
 import type { Card } from './db'
 import { readableOn } from './theme'
 
@@ -19,7 +20,7 @@ export function FlipCard({ card, color: deckColor }: { card: Card; color: string
             <div className="center">
               {title && <h2 className="card-title">{title}</h2>}
               <Md text={card.front} />
-              {card.frontImages?.map((s, i) => <img key={i} className="card-img" src={s} alt={`Question image ${i + 1}`} />)}
+              {card.frontImages?.map((s, i) => <Rimg key={i} src={s} alt={`Question image ${i + 1}`} width={card.frontImageW?.[i]} />)}
             </div>
           </div>
           <span className="hint">tap to flip</span>
@@ -28,7 +29,7 @@ export function FlipCard({ card, color: deckColor }: { card: Card; color: string
           <span className="tag">Solution{title ? ` · ${title}` : ''}</span>
           <div className="scroll" onClick={(e) => e.stopPropagation()}>
             <BackBlocks card={card} />
-            {card.backImages?.map((s, i) => <img key={i} className="card-img" src={s} alt={`Answer image ${i + 1}`} />)}
+            {card.backImages?.map((s, i) => <Rimg key={i} src={s} alt={`Answer image ${i + 1}`} width={card.backImageW?.[i]} />)}
             {card.sketches?.map((s, i) => <img key={i} className="sketch-img" src={s} alt={`Sketch ${i + 1}`} />)}
           </div>
           <span className="hint" onClick={() => setFlipped(false)}>tap to flip back</span>

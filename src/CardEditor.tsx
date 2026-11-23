@@ -4,6 +4,7 @@ import { BlockView, CodeEdit } from './Blocks'
 import { RichText } from './RichText'
 import { LANGS, normLang } from './highlight'
 import { Md } from './Md'
+import { Rimg } from './Rimg'
 import { SketchPad } from './SketchPad'
 
 export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: Card; onClose: () => void }) {
@@ -19,11 +20,25 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
   const [preview, setPreview] = useState(false)
   const [frontImages, setFrontImages] = useState<string[]>(card?.frontImages ?? [])
   const [backImages, setBackImages] = useState<string[]>(card?.backImages ?? [])
+  const [frontW, setFrontW] = useState<number[]>(card?.frontImageW ?? [])
+  const [backW, setBackW] = useState<number[]>(card?.backImageW ?? [])
   const [sketches, setSketches] = useState<string[]>(card?.sketches ?? [])
   const [sketching, setSketching] = useState(false)
 
   const images = side === 'front' ? frontImages : backImages
   const setImages = side === 'front' ? setFrontImages : setBackImages
+  const widths = side === 'front' ? frontW : backW
+  const setWidths = side === 'front' ? setFrontW : setBackW
+  const setWidth = (i: number, w: number) =>
+    setWidths((prev) => {
+      const n = images.map((_, k) => prev[k] ?? 0)
+      n[i] = w
+      return n
+    })
+  const removeImage = (i: number) => {
+    setImages(images.filter((_, j) => j !== i))
+    setWidths(images.map((_, k) => widths[k] ?? 0).filter((_, j) => j !== i))
+  }
 
   async function addImages(files: FileList | File[]) {
     const added: string[] = []
@@ -48,7 +63,7 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
 
   async function save() {
     if (!front.trim() && !frontImages.length) return
-    const data = { title: title.trim(), color, front, back: blocksToText(blocks), blocks, frontImages, backImages, sketches }
+    const data = { title: title.trim(), color, front, back: blocksToText(blocks), blocks, frontImages, backImages, frontImageW: frontW, backImageW: backW, sketches }
     if (card) await db.cards.update(card.id, data)
     else await db.cards.add({ deckId, ...data, createdAt: Date.now() } as Card)
     onClose()
@@ -85,7 +100,8 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
         {preview ? (
           <div className="editor preview">
             {side === 'front' ? <Md text={front} /> : blocks.map((b) => <BlockView key={b.id} block={b} />)}
-            {images.map((s, i) => <img key={i} className="card-img" src={s} alt={`Image ${i + 1}`} />)}
+            {images.map((s, i) => <Rimg key={i} src={s} alt={`Image ${i + 1}`} width={widths[i]} onResize={(w) => setWidth(i, w)} />)}
+            {images.length > 0 && <p className="hint-line">Drag the ◢ corner of a picture to resize it.</p>}
           </div>
         ) : side === 'front' ? (
           <RichText
@@ -189,7 +205,7 @@ export function CardEditor({ deckId, card, onClose }: { deckId: number; card?: C
             {images.map((s, i) => (
               <div key={'p' + i} className="thumb">
                 <img src={s} alt={`Picture ${i + 1}`} />
-                <button aria-label="Remove picture" onClick={() => setImages(images.filter((_, j) => j !== i))}>×</button>
+                <button aria-label="Remove picture" onClick={() => removeImage(i)}>×</button>
               </div>
             ))}
             {side === 'back' &&
